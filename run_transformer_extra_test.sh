@@ -13,7 +13,7 @@ OUTPUT_DIR=save_models/${DATASET}
 PROC_DATA_DIR=${OUTPUT_DIR}/proc_data
 DATASET_DIR="${DATA_DIR}/${DATASET}"
 
-if [ -z "$LABEL_EMB" -o -z "$TESTX" ]; then
+if [ -z "$LABEL_EMB" -o -z "$TESTX" -o -z "$MODEL_TYPE" ]; then
     echo "Usage: $0 DATASET LABEL_EMB MODEL_TYPE TESTX [MAX_XSEQ_LEN] [GPID] [MODEL_EXTRA]"
     echo
     echo "Example: $0 yso-en pifa-tfidf bert x 128 0,1 -30000"

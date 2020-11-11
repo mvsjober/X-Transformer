@@ -1,3 +1,7 @@
+/datasets/
+/save_models/
+/results_transformer*
+
 # others
 *.xz
 *.bz2
