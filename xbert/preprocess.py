@@ -203,29 +203,36 @@ def main(args):
             cache_dir=args.cache_dir if args.cache_dir else None,
         )
 
-        # process train features
-        inp_trn_feat_path = os.path.join(args.input_data_dir, 'train_raw_texts.txt')
-        logger.info("processing train features {}".format(inp_trn_feat_path))
-        trn_features, trn_xseq_lens = proc_feat(
-            args, inp_trn_feat_path, tokenizer,
-            pad_on_left=bool(args.model_type in ["xlnet"]),
-            pad_token=tokenizer.convert_tokens_to_ids([tokenizer.pad_token])[0],
-            pad_token_segment_id=4 if args.model_type in ["xlnet"] else 0,
-        )
-        logger.info(
-            "trn_xseq: min={} max={} mean={} median={}".format(
-                np.min(trn_xseq_lens), np.max(trn_xseq_lens),
-                np.mean(trn_xseq_lens), np.median(trn_xseq_lens),)
-        )
+        if args.extra_test is None:
+            # process train features
+            inp_trn_feat_path = os.path.join(args.input_data_dir, 'train_raw_texts.txt')
+            logger.info("processing train features {}".format(inp_trn_feat_path))
+            trn_features, trn_xseq_lens = proc_feat(
+                args, inp_trn_feat_path, tokenizer,
+                pad_on_left=bool(args.model_type in ["xlnet"]),
+                pad_token=tokenizer.convert_tokens_to_ids([tokenizer.pad_token])[0],
+                pad_token_segment_id=4 if args.model_type in ["xlnet"] else 0,
+            )
+            logger.info(
+                "trn_xseq: min={} max={} mean={} median={}".format(
+                    np.min(trn_xseq_lens), np.max(trn_xseq_lens),
+                    np.mean(trn_xseq_lens), np.median(trn_xseq_lens),)
+            )
 
-        # save trn features
-        os.makedirs(args.output_data_dir, exist_ok=True)
-        out_trn_feat_path = path.join(args.output_data_dir, "X.trn.{}.{}.pkl".format(args.model_type, args.max_xseq_len))
-        with open(out_trn_feat_path, "wb") as fout:
-            pickle.dump(trn_features, fout, protocol=pickle.HIGHEST_PROTOCOL)
+            # save trn features
+            os.makedirs(args.output_data_dir, exist_ok=True)
+            out_trn_feat_path = path.join(args.output_data_dir, "X.trn.{}.{}.pkl".format(args.model_type, args.max_xseq_len))
+            with open(out_trn_feat_path, "wb") as fout:
+                pickle.dump(trn_features, fout, protocol=pickle.HIGHEST_PROTOCOL)
 
         # process test features
-        inp_tst_feat_path = os.path.join(args.input_data_dir, 'test_raw_texts.txt')
+        if args.extra_test is not None:
+            tst_str = 'ts'+str(args.extra_test)
+            test_str = 'test'+str(args.extra_test)
+        else:
+            tst_str = 'tst'
+            test_str = 'test'
+        inp_tst_feat_path = os.path.join(args.input_data_dir, test_str+'_raw_texts.txt')
         logger.info("processing test features {}".format(inp_tst_feat_path))
         tst_features, tst_xseq_lens = proc_feat(
             args, inp_tst_feat_path, tokenizer,
@@ -234,13 +241,13 @@ def main(args):
             pad_token_segment_id=4 if args.model_type in ["xlnet"] else 0,
         )
         logger.info(
-            "tst_xseq: min={} max={} mean={} median={}".format(
+            "{}_xseq: min={} max={} mean={} median={}".format(tst_str,
                 np.min(tst_xseq_lens), np.max(tst_xseq_lens),
                 np.mean(tst_xseq_lens), np.median(tst_xseq_lens),)
         )
 
         # save tst features
-        out_tst_feat_path = path.join(args.output_data_dir, "X.tst.{}.{}.pkl".format(args.model_type, args.max_xseq_len))
+        out_tst_feat_path = path.join(args.output_data_dir, "X.{}.{}.{}.pkl".format(tst_str, args.model_type, args.max_xseq_len))
         with open(out_tst_feat_path, "wb") as fout:
             pickle.dump(tst_features, fout, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -250,24 +257,34 @@ def main(args):
         csr_codes = label2cluster_csr.nonzero()[1]
 
         # load trn label matrix
-        inp_trn_label_path = os.path.join(args.input_data_dir, "Y.trn.npz")
-        inp_tst_label_path = os.path.join(args.input_data_dir, "Y.tst.npz")
-        Y_trn = smat.load_npz(inp_trn_label_path)
+        if args.extra_test is None:
+            inp_trn_label_path = os.path.join(args.input_data_dir, "Y.trn.npz")
+            Y_trn = smat.load_npz(inp_trn_label_path)
+            assert Y_trn.shape[1] == label2cluster_csr.shape[0]
+
+        if args.extra_test is not None:
+            tst_str = 'ts'+str(args.extra_test)
+        else:
+            tst_str = 'tst'
+        inp_tst_label_path = os.path.join(args.input_data_dir, "Y."+tst_str+".npz")
         Y_tst = smat.load_npz(inp_tst_label_path)
-        assert Y_trn.shape[1] == label2cluster_csr.shape[0]
 
         # save C_trn and C_tst
-        C_trn = Y_trn.dot(label2cluster_csr)
-        C_tst = Y_tst.dot(label2cluster_csr)
         logger.info("NUM_LABELS: {}".format(label2cluster_csr.shape[0]))
         logger.info("NUM_CLUSTERS: {}".format(label2cluster_csr.shape[1]))
-        logger.info("C_trn: {}".format(C_trn.shape))
-        logger.info("C_tst: {}".format(C_tst.shape))
+        if args.extra_test is None:
+            C_trn = Y_trn.dot(label2cluster_csr)
+            logger.info("C_trn: {}".format(C_trn.shape))
+        C_tst = Y_tst.dot(label2cluster_csr)
+        logger.info("C_{}: {}".format(tst_str, C_tst.shape))
 
-        out_trn_label_path = os.path.join(args.output_data_dir, "C.trn.{}.npz".format(args.label_emb_name))
-        out_tst_label_path = os.path.join(args.output_data_dir, "C.tst.{}.npz".format(args.label_emb_name))
-        smat.save_npz(out_trn_label_path, C_trn)
+        if args.extra_test is None:
+            out_trn_label_path = os.path.join(args.output_data_dir, "C.trn.{}.npz".format(args.label_emb_name))
+            smat.save_npz(out_trn_label_path, C_trn)
+            logger.info("Saved output: {}".format(out_trn_label_path))
+        out_tst_label_path = os.path.join(args.output_data_dir, "C.{}.{}.npz".format(tst_str, args.label_emb_name))
         smat.save_npz(out_tst_label_path, C_tst)
+        logger.info("Saved output: {}".format(out_tst_label_path))
 
     else:
         raise ValueError("one of --do_label_embedding or --do_proc_feat or --do_proc_label must be set!")
@@ -275,6 +292,11 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    ## makoskel:
+    parser.add_argument(
+        "--extra_test",
+        type=str
+    )
     ## Required parameters
     parser.add_argument(
         "-i",

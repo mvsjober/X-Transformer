@@ -143,6 +143,11 @@ class TransformerMatcher(object):
         logger = logging.getLogger(__name__)
         parser = argparse.ArgumentParser(description="")
 
+        ## makoskel:
+        parser.add_argument(
+            "--extra_test",
+            type=str
+        )
         ## Required parameters
         parser.add_argument(
             "-m", "--model-type", type=str, required=True, default="bert", help="preprocess for model-type [bert | xlnet | xlm | roberta]",
@@ -396,7 +401,7 @@ class TransformerMatcher(object):
 
                 # get pooled_output, which is the [CLS] embedding for the document
                 if get_hidden:
-                    if args.model_type == "bert":
+                    if args.model_type == "bert" or args.model_type.startswith("bert-"):
                         if args.n_gpu > 1:
                          # assume self.model hasattr module because torch.nn.DataParallel. Else, just pull model.bert. in single gpu case
                             pooled_output = self.model.module.bert.pooler(hidden_states[-1])
@@ -631,8 +636,9 @@ def main():
         assert args.local_rank == -1
 
         # load data
-        with open(args.trn_feat_path, "rb") as fin:
-            X_trn = pickle.load(fin)
+        if args.extra_test is None:
+            with open(args.trn_feat_path, "rb") as fin:
+                X_trn = pickle.load(fin)
         with open(args.tst_feat_path, "rb") as fin:
             X_tst = pickle.load(fin)
         C_trn = smat.load_npz(args.trn_label_path)
@@ -650,27 +656,32 @@ def main():
         matcher.model = model
 
         # predict
-        trn_loss, trn_metrics, C_trn_pred, trn_embeddings = matcher.predict(args, X_trn, C_trn, topk=args.only_topk, get_hidden=True)
+        if args.extra_test is None:
+            trn_loss, trn_metrics, C_trn_pred, trn_embeddings = matcher.predict(args, X_trn, C_trn, topk=args.only_topk, get_hidden=True)
+            logger.info("| matcher_trn_prec {}".format(" ".join("{:4.2f}".format(100 * v) for v in trn_metrics.prec)))
+            logger.info("| matcher_trn_recl {}".format(" ".join("{:4.2f}".format(100 * v) for v in trn_metrics.recall)))
+            tst_str = 'tst'
+        else:
+            tst_str = 'ts'+str(args.extra_test)
         tst_loss, tst_metrics, C_tst_pred, tst_embeddings = matcher.predict(args, X_tst, C_tst, topk=args.only_topk, get_hidden=True)
-        logger.info("| matcher_trn_prec {}".format(" ".join("{:4.2f}".format(100 * v) for v in trn_metrics.prec)))
-        logger.info("| matcher_trn_recl {}".format(" ".join("{:4.2f}".format(100 * v) for v in trn_metrics.recall)))
-        logger.info("| matcher_tst_prec {}".format(" ".join("{:4.2f}".format(100 * v) for v in tst_metrics.prec)))
-        logger.info("| matcher_tst_recl {}".format(" ".join("{:4.2f}".format(100 * v) for v in tst_metrics.recall)))
+        logger.info("| matcher_{}_prec {}".format(tst_str, " ".join("{:4.2f}".format(100 * v) for v in tst_metrics.prec)))
+        logger.info("| matcher_{}_recl {}".format(tst_str, " ".join("{:4.2f}".format(100 * v) for v in tst_metrics.recall)))
 
         # save C_trn_pred.npz and trn_embedding.npy
-        trn_csr_codes = rf_util.smat_util.sorted_csr(C_trn_pred, only_topk=args.only_topk)
-        trn_csr_codes = transform_prediction(trn_csr_codes, transform="lpsvm-l2")
-        csr_codes_path = os.path.join(args.output_dir, "C_trn_pred.npz")
-        smat.save_npz(csr_codes_path, trn_csr_codes)
-        embedding_path = os.path.join(args.output_dir, "trn_embeddings.npy")
-        np.save(embedding_path, trn_embeddings)
+        if args.extra_test is None:
+            trn_csr_codes = rf_util.smat_util.sorted_csr(C_trn_pred, only_topk=args.only_topk)
+            trn_csr_codes = transform_prediction(trn_csr_codes, transform="lpsvm-l2")
+            csr_codes_path = os.path.join(args.output_dir, "C_trn_pred.npz")
+            smat.save_npz(csr_codes_path, trn_csr_codes)
+            embedding_path = os.path.join(args.output_dir, "trn_embeddings.npy")
+            np.save(embedding_path, trn_embeddings)
 
         # save C_eval_pred.npz and tst_embedding.npy
         tst_csr_codes = rf_util.smat_util.sorted_csr(C_tst_pred, only_topk=args.only_topk)
         tst_csr_codes = transform_prediction(tst_csr_codes, transform="lpsvm-l2")
-        csr_codes_path = os.path.join(args.output_dir, "C_tst_pred.npz")
+        csr_codes_path = os.path.join(args.output_dir, "C_{}_pred.npz".format(tst_str))
         smat.save_npz(csr_codes_path, tst_csr_codes)
-        embedding_path = os.path.join(args.output_dir, "tst_embeddings.npy")
+        embedding_path = os.path.join(args.output_dir, "{}_embeddings.npy".format(tst_str))
         np.save(embedding_path, tst_embeddings)
 
 
