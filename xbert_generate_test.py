@@ -11,12 +11,9 @@ from gensim.matutils import corpus2csc
 from scipy.sparse import csr_matrix
 from stop_words import get_stop_words
 
-default_vocab_file = "/media/data/data/hpd/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv"
+default_vocab_file = "yso-ysoplaces-cicero-fi.tsv"
 
 train_txt_fname = 'train_raw_texts.txt'
-out_test_txt = 'testx_raw_texts.txt'
-out_x_npz = 'X.tsx.npz'
-out_y_npz = 'Y.tsx.npz'
 
 label_prefix = '<http://www.yso.fi/onto/yso/'
 
@@ -128,17 +125,20 @@ def main(args):
 
     test_texts, test_labels = read_text_datadir(args.test_data)
     test_texts = filter_words(test_texts, args.language)
+    out_test_txt = 'test{}_raw_texts.txt'.format(args.extra_test)
     write_text_data(test_texts, os.path.join(ds_path, out_test_txt))
 
     print('Converting test data to bag-of-words format...')
     test_corpus = [dictionary.doc2bow(t) for t in test_texts]
     test_tfidf = tfidf[test_corpus]
 
+    out_x_npz = 'X.ts{}.npz'.format(args.extra_test)
     x_csr = corpus2csc(test_tfidf, num_terms=n_features).transpose().tocsr()
     write_csr(x_csr, os.path.join(ds_path, out_x_npz))
 
     subj_map = read_subjects_map(args.vocab)
 
+    out_y_npz = 'Y.ts{}.npz'.format(args.extra_test)
     y_csr = y_csr_matrix(test_labels, subj_map)
     write_csr(y_csr, os.path.join(ds_path, out_y_npz))
 
@@ -150,6 +150,7 @@ if __name__ == '__main__':
     parser.add_argument('dataset', help='path to X-BERT dataset directory, '
                         'e.g., datasets/yso-en')
     parser.add_argument('language', help='fin|swe|eng')
+    parser.add_argument('extra_test')
     parser.add_argument('--vocab', default=default_vocab_file,
                         help='vocabulary file')
     args = parser.parse_args()
