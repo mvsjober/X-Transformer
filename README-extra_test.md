@@ -1,19 +1,21 @@
 # How to do inference with extra test sets
 
-We assume that you have previously trained an X-Transformers model.
+We assume that you have previously trained an X-Transformers model, or you are getting a pre-trained model from somewhere else.
 
 ## Clone repository
 
+We need our customized fork:
+
 ```bash
 git clone https://github.com/mvsjober/X-Transformer
-cd X-Transformers
+cd X-Transformer
 ```
 
 ## Generate test set input files
 
 We need to generate the test set [input files for X-Transformer in the correct format](https://github.com/mvsjober/X-Transformer#running-x-transformer-on-customized-datasets).
 
-First we need the full original training set in order to recreate the dictionary, it should be copied into `datasets/DATABASE` where `DATABASE` is the name for the database. For example:
+First we need the full original training set in order to recreate the dictionary and tfidf model, it should be copied into `datasets/DATABASE` where `DATABASE` is the name for the database. For example:
 
 ```bash
 mkdir datasets/yso-en
@@ -23,7 +25,7 @@ cp /path/to/original/datasets/yso-en/train_raw_texts.txt datasets/yso-en/
 Generate `X.tsx.npz`, `Y.tsx.npz`, and `testx_raw_texts.txt` from a given [Annif-style full-text document corpus directory](https://github.com/NatLibFi/Annif/wiki/Document-corpus-formats#full-text-document-corpus-directory).
 
 ```bash
-./xbert_generate_test.py /path/to/annif-data/test/ datasets/yso-en/ eng
+./xbert_generate_test.py /path/to/annif-data/test/ datasets/yso-en/ eng x
 ```
 
 ## Copy X-Transformer model files
