@@ -1,3 +1,5 @@
+**Note:** this is a special fork of the X-Transformers code with some additions in order to do inference on additional test sets, and some scripts to convert Annif-style datasets for usage with X-Transformers. See fork-specific instructions in [README-Annif.md](README-Annif.md).
+
 # Taming Pretrained Transformers for XMC problems
 
 This is a README for the experimental code of the following paper
@@ -6,8 +8,6 @@ This is a README for the experimental code of the following paper
 >Wei-Cheng Chang, Hsiang-Fu Yu, Kai Zhong, Yiming Yang, Inderjit Dhillon
 
 >KDD 2020
-
-
 
 ## Installation
 
