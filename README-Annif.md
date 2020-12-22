@@ -57,24 +57,24 @@ If a model has been trained elsewhere (such as an HPC cluster), we need to copy 
 The following (or similar) files/directories need to be copied in place from the `save_models/MODEL_NAME` directory where the model was originally trained:
 
 ```
-pifa-tfidf-s0/indexer/code.npz
+pifa-tfidf-s0/indexer/
 proc_data/C.trn.pifa-tfidf-s0.npz
 pifa-tfidf-s0/matcher/bert-large-cased-whole-word-masking/{config.json,pytorch_model.bin}
 pifa-tfidf-s0/ranker/bert-large-cased-whole-word-masking/param.json 
-pifa-tfidf-s0/ranker/bert-large-cased-whole-word-masking/0.model 
+pifa-tfidf-s0/ranker/bert-large-cased-whole-word-masking/0.model/
 ```
 
 You can try the helper script, to copy from a local directory:
 
 
 ```bash
-./xbert_copy_model.sh ../X-Transformer/ yso-en pifa-tfidf bert -30000
+./xbert_copy_model.sh ../X-Transformer/ yso-en pifa-tfidf bert bert-large-cased-whole-word-masking -30000
 ```
 
 or a remote directory:
 
 ```bash
-./xbert_copy_model.sh puhti:projappl/hpd/X-Transformer/ yso-en pifa-tfidf bert -30000 yso-kirjaesittely
+./xbert_copy_model.sh puhti:projappl/hpd/X-Transformer/ yso-fi pifa-tfidf bert  TurkuNLP/bert-base-finnish-uncased-v1 -50000 yso-fi-new
 ```
 
 ### Run inference script
