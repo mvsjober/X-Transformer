@@ -38,7 +38,7 @@ PATHS_TO_COPY=(
     proc_data/C.trn.${LABEL_EMB}-s0.npz
     ${LABEL_EMB}-s0/matcher${MODEL_EXTRA}/${MODEL_NAME}/{config.json,pytorch_model.bin}
     ${LABEL_EMB}-s0/ranker${MODEL_EXTRA}/${MODEL_NAME}/param.json 
-    ${LABEL_EMB}-s0/ranker${MODEL_EXTRA}/${MODEL_NAME}/0.model /
+    ${LABEL_EMB}-s0/ranker${MODEL_EXTRA}/${MODEL_NAME}/0.model/
 )
 
 ZIPNAMES=$(mktemp)
