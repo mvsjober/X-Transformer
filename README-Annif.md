@@ -75,6 +75,12 @@ Generate test set input files:
 ./xbert_generate_test.py ~/data/hpd/test/kirjaesittelyt/yso/fin/test/ ~/data/hpd/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv datasets/yso-fi fi --extra_test kes --ext tnpp
 ```
 
+Note that this requires that we have generated `.tnpp.txt` versions of all the test set text files. First, the [Turku neural parser pipeline](http://turkunlp.org/Turku-neural-parser-pipeline/) tools are used to generate `.txt.conllu` files. Next:
+
+```bash
+for i in *.txt.conllu ; do grep -v "^#" $i | cut -f3 | tr "#" " " | tr "\n" " " | tr [:upper:] [:lower:] > ${i/.txt.conllu/.tnpp.txt} ; done
+```
+
 Run inference and evaluation:
 
 ```bash
