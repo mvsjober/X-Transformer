@@ -18,6 +18,46 @@ cd X-Transformer
 pip install stop-words gensim pandas
 ```
 
+For Swedish (at least), you also need to upgrade the version of Transformers:
+
+```bash
+pip install transformers==2.5.1 -U
+```
+
+## Reproduce some HPD project results
+
+### English
+
+Download and extract original dictionary and TF-IDF model:
+
+```bash
+wget https://a3s.fi/hpd-data/yso-en-dict-tfidf.zip
+unzip yso-en-dict-tfidf.zip
+```
+
+Unzipping will create some files under `datasets/yso-en`. 
+
+Download and extract pre-trained model:
+
+```bash
+wget https://a3s.fi/hpd-models/yso-en-pifa-tfidf-bert-30000.zip
+unzip yso-en-pifa-tfidf-bert-30000.zip
+```
+
+Unzipping will create several files under `save_models/yso-en`.
+
+Generate test set input files:
+
+```bash
+./xbert_generate_test.py ~/data/hpd/test/kirjaesittelyt/yso/eng/all/ ~/data/hpd/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv datasets/yso-en eng --extra_test kes
+```
+
+Run inference and evaluation:
+
+```bash
+./run_transformer_extra_test.sh yso-en pifa-tfidf bert bert-large-cased-whole-word-masking kes 128 0 -30000
+```
+
 ## Generate training set input files
 
 First, we need to generate the training set [input files for X-Transformer in the correct format](https://github.com/OctoberChang/X-Transformer#running-x-transformer-on-customized-datasets). This can be done with the `xbert_generate_train.py` script, for example:
