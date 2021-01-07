@@ -58,6 +58,30 @@ Run inference and evaluation:
 ./run_transformer_extra_test.sh yso-en pifa-tfidf bert bert-large-cased-whole-word-masking kes 128 0 -30000
 ```
 
+### Finnish
+
+Download and extract dictionary, TF-IDF and model:
+
+```bash
+wget https://a3s.fi/hpd-data/yso-fi-dict-tfidf.zip
+wget https://a3s.fi/hpd-models/yso-fi-pifa-tfidf-bert-50000.zip
+unzip yso-fi-dict-tfidf.zip
+unzip yso-fi-pifa-tfidf-bert-50000.zip
+```
+
+Generate test set input files:
+
+```bash
+./xbert_generate_test.py ~/data/hpd/test/kirjaesittelyt/yso/fin/test/ ~/data/hpd/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv datasets/yso-fi fi --extra_test kes --ext tnpp
+```
+
+Run inference and evaluation:
+
+```bash
+./run_transformer_extra_test.sh yso-fi pifa-tfidf bert-base-finnish-uncased TurkuNLP/bert-base-finnish-uncased-v1 kes 128 0 -50000
+```
+
+
 ## Generate training set input files
 
 First, we need to generate the training set [input files for X-Transformer in the correct format](https://github.com/OctoberChang/X-Transformer#running-x-transformer-on-customized-datasets). This can be done with the `xbert_generate_train.py` script, for example:

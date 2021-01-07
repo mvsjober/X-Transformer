@@ -43,8 +43,6 @@ def main(args):
     ds_path = args.dataset
     os.makedirs(ds_path, exist_ok=True)
 
-    # train_texts = read_text_data(os.path.join(ds_path, train_txt_fname))
-
     dict_fname = os.path.join(ds_path, 'train.dict')
     print('Loading dictionary from [{}] ...'.format(dict_fname))
     dictionary = gensim.corpora.Dictionary.load(dict_fname)
@@ -56,10 +54,14 @@ def main(args):
     loaded_tfidf = gensim.corpora.MmCorpus(tfidf_fname)
     tfidf = gensim.models.TfidfModel(loaded_tfidf)
 
-    test_texts, test_labels = read_text_datadir(args.test_data, args.ext)
+    test_texts, test_labels = read_text_datadir(args.test_data, '.txt')
     test_texts = filter_words(test_texts, args.language)
     out_test_txt = 'test{}_raw_texts.txt'.format(args.extra_test)
     write_text_data(test_texts, os.path.join(ds_path, out_test_txt))
+
+    if args.ext:
+        test_texts, test_labels = read_text_datadir(args.test_data, '.' + args.ext + '.txt')
+        test_texts = filter_words(test_texts, args.language)
 
     print('Converting test data to bag-of-words format...')
     test_corpus = [dictionary.doc2bow(t) for t in test_texts]
@@ -89,13 +91,13 @@ if __name__ == '__main__':
                         'e.g., datasets/yso-en')
     parser.add_argument('language', help='fin|swe|eng')
     parser.add_argument('--extra_test', default='', nargs='?')
-    parser.add_argument('--ext', default='.txt', nargs='?')
+    parser.add_argument('--ext', 
+                        help='Specify different input file extension for '
+                        'mapping to TF-IDF matrix, e.g., "tnpp"')
     args = parser.parse_args()
     args.language = parse_language(args.language)
     if args.language is None:
         print('ERROR: language [{}] not supported'.format(args.language))
         sys.exit(1)
-    if args.ext[0] != '.':
-        args.ext = '.' + args.ext
 
     main(args)
