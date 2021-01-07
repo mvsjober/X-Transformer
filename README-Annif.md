@@ -82,5 +82,5 @@ or a remote directory:
 Example:
 
 ```bash
-./run_transformer_extra_test.sh yso-en pifa-tfidf bert x 128 0 -30000
+./run_transformer_extra_test.sh yso-en pifa-tfidf bert bert-large-cased-whole-word-masking x 128 0 -30000
 ```
