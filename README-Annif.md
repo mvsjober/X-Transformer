@@ -81,6 +81,20 @@ Run inference and evaluation:
 ./run_transformer_extra_test.sh yso-fi pifa-tfidf bert-base-finnish-uncased TurkuNLP/bert-base-finnish-uncased-v1 kes 128 0 -50000
 ```
 
+### Swedish
+
+Very similar to English:
+
+```bash
+wget https://a3s.fi/hpd-data/yso-sv-dict-tfidf.zip
+wget https://a3s.fi/hpd-models/yso-sv-pifa-tfidf-bert-30000.zip
+unzip yso-sv-dict-tfidf.zip
+unzip yso-sv-pifa-tfidf-bert-30000.zip
+
+./xbert_generate_test.py ~/data/hpd/test/kirjaesittelyt/yso/swe/all/ ~/data/hpd/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv datasets/yso-sv sv --extra_test kes
+
+./run_transformer_extra_test.sh yso-sv pifa-tfidf bert-large-swedish-uncased af-ai-center/bert-large-swedish-uncased kes 128 0 -30000
+```
 
 ## Generate training set input files
 
