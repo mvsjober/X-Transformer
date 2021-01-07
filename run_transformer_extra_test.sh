@@ -1,12 +1,15 @@
 #!/bin/bash
 
+set -e
+
 DATASET=$1
 LABEL_EMB=$2    # pifa-tfidf | pifa-neural | text-emb
 MODEL_TYPE=$3
-TESTX=$4
-MAX_XSEQ_LEN=$5
-GPID=$6
-MODEL_EXTRA=$7  #-30000
+MODEL_NAME=$4
+TESTX=$5
+MAX_XSEQ_LEN=$6
+GPID=$7
+MODEL_EXTRA=$8  #-30000
 
 DATA_DIR=datasets
 OUTPUT_DIR=save_models/${DATASET}
@@ -14,7 +17,7 @@ PROC_DATA_DIR=${OUTPUT_DIR}/proc_data
 DATASET_DIR="${DATA_DIR}/${DATASET}"
 
 if [ -z "$LABEL_EMB" -o -z "$TESTX" -o -z "$MODEL_TYPE" ]; then
-    echo "Usage: $0 DATASET LABEL_EMB MODEL_TYPE TESTX [MAX_XSEQ_LEN] [GPID] [MODEL_EXTRA]"
+    echo "Usage: $0 DATASET LABEL_EMB MODEL_TYPE MODEL_NAME TESTX [MAX_XSEQ_LEN] [GPID] [MODEL_EXTRA]"
     echo
     echo "Example: $0 yso-en pifa-tfidf bert x 128 0,1 -30000"
     exit 1
@@ -36,20 +39,6 @@ if [ ! -d ${DATASET_DIR} ]; then
     exit 1
 fi
 
-# HuggingFace pretrained model preprocess
-if [ $MODEL_TYPE == "bert" ]; then
-    MODEL_NAME="bert-large-cased-whole-word-masking"
-elif [ $MODEL_TYPE == "roberta" ]; then
-    MODEL_NAME="roberta-large"
-elif [ $MODEL_TYPE == 'xlnet' ]; then
-    MODEL_NAME="xlnet-large-cased"
-elif [ $MODEL_TYPE == 'bert-multilingual' ]; then
-    MODEL_NAME="bert-base-multilingual-uncased"
-else
-    echo "Unknown MODEL_NAME!"
-    exit 1
-fi
-
 # construct C.tsx.[label-emb].npz for training matcher
 echo "construct C.tsx.[label-emb].npz for training matcher"
 SEED=0
@@ -62,6 +51,24 @@ python -u -m xbert.preprocess \
     -l ${LABEL_EMB_NAME} \
     -c ${INDEXER_DIR}/code.npz
 
+MODEL_NAME_PRE=${MODEL_NAME}
+if [[ "$MODEL_TYPE" == "bert-base-finnish-uncased" ]]
+then
+    MODEL_NAME_PRE="./bert-base-finnish-uncased-v1/"
+
+    if [ ! -d $MODEL_NAME_PRE ]
+    then
+        wget http://dl.turkunlp.org/finbert/bert-base-finnish-uncased-v1.zip
+        unzip bert-base-finnish-uncased-v1.zip
+        cd bert-base-finnish-uncased-v1
+        ln -s bert_config.json config.json
+        ln -s bert_model.ckpt.meta model.ckpt.meta
+        ln -s bert_model.ckpt.index model.ckpt.index
+        ln -s bert_model.ckpt.data-00000-of-00001 model.ckpt.data-00000-of-00001
+        cd ..
+    fi
+fi
+
 # do_proc_feat
 echo "do_proc_feat"
 OUTPUT_DIR=save_models/${DATASET}
@@ -72,7 +79,7 @@ python -u -m xbert.preprocess \
     -i ./datasets/${DATASET} \
     -o ${PROC_DATA_DIR} \
     -m ${MODEL_TYPE} \
-    -n ${MODEL_NAME} \
+    -n ${MODEL_NAME_PRE} \
     --max_xseq_len ${MAX_XSEQ_LEN} \
     |& tee ${PROC_DATA_DIR}/log.${MODEL_TYPE}.${MAX_XSEQ_LEN}.txt
 

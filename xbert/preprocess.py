@@ -51,6 +51,9 @@ MODEL_CLASSES = {
     "roberta": (RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer),
     "distilbert": (DistilBertConfig, DistilBertForSequenceClassification, DistilBertTokenizer,),
     "albert": (AlbertConfig, AlbertForSequenceClassification, AlbertTokenizer),
+    "bert-base-finnish-uncased": (BertConfig, BertForSequenceClassification, BertTokenizer),
+    "bert-large-swedish-uncased": (BertConfig, BertForSequenceClassification, BertTokenizer),
+    "bert-multilingual": (BertConfig, BertForSequenceClassification, BertTokenizer),
 }
 
 

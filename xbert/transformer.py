@@ -76,6 +76,9 @@ MODEL_CLASSES = {
     "bert": (BertConfig, BertForXMLC, BertTokenizer),
     "roberta": (RobertaConfig, RobertaForXMLC, RobertaTokenizer),
     "xlnet": (XLNetConfig, XLNetForXMLC, XLNetTokenizer),
+    "bert-base-finnish-uncased": (BertConfig, BertForXMLC, BertTokenizer),
+    "bert-large-swedish-uncased": (BertConfig, BertForXMLC, BertTokenizer),
+    "bert-multilingual": (BertConfig, BertForXMLC, BertTokenizer),
 }
 
 logger = None

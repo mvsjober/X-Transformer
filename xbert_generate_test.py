@@ -14,19 +14,21 @@ from xbert_generate_train import (parse_language, write_text_data,
 label_prefix = '<http://www.yso.fi/onto/yso/'
 
 
-def read_text_datadir(data_path):
+def read_text_datadir(data_path, ext):
     texts = []
     labels = []
     files = sorted(os.listdir(data_path))
     for fn in files:
-        if ".tnpp" in fn:
-            continue
-        if fn.endswith(".txt"):
+        if fn.endswith(ext):
+            tsvfn = fn.replace(ext, ".tsv")
+            tsvfnp = os.path.join(data_path, tsvfn)
+            if not os.path.exists(tsvfnp):
+                print('Could not find {}, skipping {}...'.format(tsvfn, fn))
+                continue
             with open(os.path.join(data_path, fn), encoding='utf-8') as fp:
                 doc = fp.read().replace("\n", " ")
                 texts.append(doc)
-            tsvfn = fn.replace(".txt", ".tsv")
-            with open(os.path.join(data_path, tsvfn)) as fp:
+            with open(tsvfnp) as fp:
                 labs = []
                 for line in fp:
                     parts = line.split()
@@ -47,13 +49,14 @@ def main(args):
     print('Loading dictionary from [{}] ...'.format(dict_fname))
     dictionary = gensim.corpora.Dictionary.load(dict_fname)
     n_features = len(dictionary.token2id)
+    print('n_features =', n_features)
 
     tfidf_fname = os.path.join(ds_path, 'train.tfidf.mm')
     print('Loading TF-IDF from [{}]'.format(tfidf_fname))
     loaded_tfidf = gensim.corpora.MmCorpus(tfidf_fname)
     tfidf = gensim.models.TfidfModel(loaded_tfidf)
 
-    test_texts, test_labels = read_text_datadir(args.test_data)
+    test_texts, test_labels = read_text_datadir(args.test_data, args.ext)
     test_texts = filter_words(test_texts, args.language)
     out_test_txt = 'test{}_raw_texts.txt'.format(args.extra_test)
     write_text_data(test_texts, os.path.join(ds_path, out_test_txt))
@@ -86,10 +89,13 @@ if __name__ == '__main__':
                         'e.g., datasets/yso-en')
     parser.add_argument('language', help='fin|swe|eng')
     parser.add_argument('--extra_test', default='', nargs='?')
+    parser.add_argument('--ext', default='.txt', nargs='?')
     args = parser.parse_args()
     args.language = parse_language(args.language)
     if args.language is None:
         print('ERROR: language [{}] not supported'.format(args.language))
         sys.exit(1)
+    if args.ext[0] != '.':
+        args.ext = '.' + args.ext
 
     main(args)
