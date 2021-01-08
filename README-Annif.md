@@ -134,11 +134,23 @@ Inference and evaluation examples (uses splitting):
 
 Language model trained on multi-language (Finnish, Swedish, English) data.
 
+```bash
+wget https://a3s.fi/hpd-data/yso-trilang-dict-tfidf.zip
+wget https://a3s.fi/hpd-models/yso-trilang-pifa-tfidf-bert-50000.zip
+unzip yso-trilang-dict-tfidf.zip
+unzip yso-trilang-pifa-tfidf-bert-50000.zip
+```
 
+Example run:
+
+```bash
+./xbert_generate_test.py ~/data/hpd/test/jyu-theses/swe/ ~/data/hpd/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv datasets/yso-trilang sv --extra_test jyu_swe --split 128
+./run_transformer_extra_test.sh yso-trilang pifa-tfidf bert-multilingual bert-base-multilingual-uncased jyu_swe 128 0 -50000
+```
 
 ## Generate training set input files
 
-First, we need to generate the training set [input files for X-Transformer in the correct format](https://github.com/OctoberChang/X-Transformer#running-x-transformer-on-customized-datasets). This can be done with the `xbert_generate_train.py` script, for example:
+If you want to train your own models, you first need to generate the training set [input files for X-Transformer in the correct format](https://github.com/OctoberChang/X-Transformer#running-x-transformer-on-customized-datasets). This can be done with the `xbert_generate_train.py` script, for example:
 
 ```bash
 ./xbert_generate_train.py /path/to/yso-cicero-finna-eng.tsv /path/to/yso-ysoplaces-cicero-fi.tsv datasets/yso-en eng
@@ -157,7 +169,7 @@ Generate `X.tst.npz`, `Y.tst.npz`, and `test_raw_texts.txt` from a given [Annif-
 We can also create additional test sets by specifying an extra suffix to add to the created files. For example:
 
 ```bash
-./xbert_generate_test.py /path/to/annif-data/test/ /path/to/yso-ysoplaces-cicero-fi.tsv datasets/yso-en eng --extra_test x
+./xbert_generate_test.py /path/to/annif-data/test/ /path/to/yso-ysoplaces-cicero-fi.tsv datasets/yso-en eng --extra_test foo
 ```
 
 would generate the files `X.tsx.npz`, `Y.tsx.npz`, and `testx_raw_texts.txt`.
@@ -189,10 +201,10 @@ You can try the helper script, to copy from a local directory:
 ./xbert_copy_model.sh ../X-Transformer/ yso-en pifa-tfidf bert bert-large-cased-whole-word-masking -30000
 ```
 
-or a remote directory:
+or a remote directory (note last argument if the remote folder is named differently):
 
 ```bash
-./xbert_copy_model.sh puhti:projappl/hpd/X-Transformer/ yso-fi pifa-tfidf bert  TurkuNLP/bert-base-finnish-uncased-v1 -50000 yso-fi-new
+./xbert_copy_model.sh puhti:projappl/hpd/X-Transformer/ yso-fi pifa-tfidf bert TurkuNLP/bert-base-finnish-uncased-v1 -50000 yso-fi-new
 ```
 
 ### Run inference script
@@ -200,5 +212,5 @@ or a remote directory:
 Example:
 
 ```bash
-./run_transformer_extra_test.sh yso-en pifa-tfidf bert bert-large-cased-whole-word-masking x 128 0 -30000
+./run_transformer_extra_test.sh yso-en pifa-tfidf bert bert-large-cased-whole-word-masking foo 128 0 -30000
 ```
