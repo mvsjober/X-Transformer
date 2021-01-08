@@ -2,6 +2,7 @@
 
 set -e
 
+ALL_ARGS=("$@")
 DATASET=$1
 LABEL_EMB=$2    # pifa-tfidf | pifa-neural | text-emb
 MODEL_TYPE=$3
@@ -10,6 +11,7 @@ TESTX=$5
 MAX_XSEQ_LEN=$6
 GPID=$7
 MODEL_EXTRA=$8  #-30000
+EVAL_OPTS="${ALL_ARGS[@]:8}"
 
 DATA_DIR=datasets
 OUTPUT_DIR=save_models/${DATASET}
@@ -17,7 +19,7 @@ PROC_DATA_DIR=${OUTPUT_DIR}/proc_data
 DATASET_DIR="${DATA_DIR}/${DATASET}"
 
 if [ -z "$LABEL_EMB" -o -z "$TESTX" -o -z "$MODEL_TYPE" ]; then
-    echo "Usage: $0 DATASET LABEL_EMB MODEL_TYPE MODEL_NAME TESTX [MAX_XSEQ_LEN] [GPID] [MODEL_EXTRA]"
+    echo "Usage: $0 DATASET LABEL_EMB MODEL_TYPE MODEL_NAME TESTX [MAX_XSEQ_LEN] [GPID] [MODEL_EXTRA] [EVAL_OPTS]"
     echo
     echo "Run examples:"
     echo "$0 yso-en pifa-tfidf bert bert-large-cased-whole-word-masking x 128 0,1 -30000"
@@ -148,10 +150,17 @@ for LABEL_NAME in "${LABEL_NAME_ARR[@]}"; do
 done
 
 # final eval
-EVAL_DIR=results_transformer-large
-mkdir -p ${EVAL_DIR}
-python -u -m xbert.evaluator \
-    -y ${DATASET_DIR}/Y.ts${TESTX}.npz \
-    -e -p ${PRED_NPZ_PATHS} \
-    |& tee ${EVAL_DIR}/${EXP_NAME}.txt
+# EVAL_DIR=results_transformer-large
+# mkdir -p ${EVAL_DIR}
+# python -u -m xbert.evaluator \
+#     -y ${DATASET_DIR}/Y.ts${TESTX}.npz \
+#     -e -p ${PRED_NPZ_PATHS} \
+#     |& tee ${EVAL_DIR}/${EXP_NAME}.txt
 
+INDICES="${DATASET_DIR}/test${TESTX}_indices.txt"
+if [ -f "$INDICES" ]
+then
+    EVAL_OPTS="$EVAL_OPTS -i $INDICES"
+fi
+
+./xbert_evaluator.py -y ${DATASET_DIR}/Y.ts${TESTX}.npz -p ${PRED_NPZ_PATHS} $EVAL_OPTS
