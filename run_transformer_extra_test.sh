@@ -19,7 +19,9 @@ DATASET_DIR="${DATA_DIR}/${DATASET}"
 if [ -z "$LABEL_EMB" -o -z "$TESTX" -o -z "$MODEL_TYPE" ]; then
     echo "Usage: $0 DATASET LABEL_EMB MODEL_TYPE MODEL_NAME TESTX [MAX_XSEQ_LEN] [GPID] [MODEL_EXTRA]"
     echo
-    echo "Example: $0 yso-en pifa-tfidf bert x 128 0,1 -30000"
+    echo "Run examples:"
+    echo "$0 yso-en pifa-tfidf bert bert-large-cased-whole-word-masking x 128 0,1 -30000"
+    echo "$0 yso-fi pifa-tfidf bert-base-finnish-uncased TurkuNLP/bert-base-finnish-uncased-v1 jyu 128 0 -50000"
     exit 1
 fi
 
@@ -117,7 +119,7 @@ CUDA_VISIBLE_DEVICES=${GPID} python -u xbert/transformer.py \
 
 LABEL_NAME_ARR=( $LABEL_EMB_NAME )
 MODEL_NAME_ARR=( $MODEL_NAME )
-EXP_NAME=${DATASET}.final
+EXP_NAME="${DATASET}-${LABEL_EMB}-${MODEL_TYPE}${MODEL_EXTRA}.final"
 
 PRED_NPZ_PATHS=""
 for LABEL_NAME in "${LABEL_NAME_ARR[@]}"; do

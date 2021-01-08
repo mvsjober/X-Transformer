@@ -23,7 +23,7 @@ def read_text_datadir(data_path, ext):
             tsvfn = fn.replace(ext, ".tsv")
             tsvfnp = os.path.join(data_path, tsvfn)
             if not os.path.exists(tsvfnp):
-                print('Could not find {}, skipping {}...'.format(tsvfn, fn))
+                #print('Could not find {}, skipping {}...'.format(tsvfn, fn))
                 continue
             with open(os.path.join(data_path, fn), encoding='utf-8') as fp:
                 doc = fp.read().replace("\n", " ")
@@ -37,6 +37,29 @@ def read_text_datadir(data_path, ext):
                 labels.append(labs)
     print('Read {} documents from [{}]'.format(len(texts), data_path))
     return texts, labels
+
+
+def split_texts(n, test_texts, test_labels):
+    test_texts_splitted, test_labels_splitted, test_indices = [], [], []
+    # n = 128
+    for i_t, t in enumerate(test_texts):
+        for i in range(0, len(t), n):  
+            test_texts_splitted.append(t[i:i + n])
+            test_labels_splitted.append(test_labels[i_t])
+            test_indices.append(i_t)
+
+    return test_texts_splitted, test_labels_splitted, test_indices
+
+
+def fix_ext(ext):
+    if ext:
+        if ext[0] != '.':
+            ext = '.' + ext
+        if ext == ".tnpp":  # for backwards compatibility
+            ext = ext + ".txt"
+    else:
+        ext = ".txt"
+    return ext
 
 
 def main(args):
@@ -54,13 +77,25 @@ def main(args):
     loaded_tfidf = gensim.corpora.MmCorpus(tfidf_fname)
     tfidf = gensim.models.TfidfModel(loaded_tfidf)
 
-    test_texts, test_labels = read_text_datadir(args.test_data, '.txt')
+    test_texts, test_labels = read_text_datadir(args.test_data, args.raw_ext)
     test_texts = filter_words(test_texts, args.language)
+
+    if args.split:
+        print('Before splitting:', len(test_texts), 'test documents')
+        test_texts, test_labels, test_indices = split_texts(args.split, test_texts, test_labels)
+        print('After splitting:', len(test_texts), 'test documents')
+
+        out_test_ind_txt = 'test{}_indices.txt'.format(args.extra_test)
+        with open(os.path.join(ds_path, out_test_ind_txt), 'w') as w:
+            for t in test_indices:
+                w.write(str(t)+"\n")
+            print('Saved', out_test_ind_txt)
+
     out_test_txt = 'test{}_raw_texts.txt'.format(args.extra_test)
     write_text_data(test_texts, os.path.join(ds_path, out_test_txt))
 
-    if args.ext:
-        test_texts, test_labels = read_text_datadir(args.test_data, '.' + args.ext + '.txt')
+    if args.ext != args.raw_ext:
+        test_texts, test_labels = read_text_datadir(args.test_data, args.ext)
         test_texts = filter_words(test_texts, args.language)
 
     print('Converting test data to bag-of-words format...')
@@ -91,13 +126,19 @@ if __name__ == '__main__':
                         'e.g., datasets/yso-en')
     parser.add_argument('language', help='fin|swe|eng')
     parser.add_argument('--extra_test', default='', nargs='?')
-    parser.add_argument('--ext', 
-                        help='Specify different input file extension for '
-                        'mapping to TF-IDF matrix, e.g., "tnpp"')
+    parser.add_argument('--ext', default='.txt', nargs='?',
+                        help='Specify input file extension for mapping to '
+                        'TF-IDF matrix, e.g., "tnpp"')
+    parser.add_argument('--raw_ext', default='.txt', nargs='?',
+                        help='Specify input file extension for generating raw '
+                        'text file')
+    parser.add_argument('--split', type=int)
     args = parser.parse_args()
     args.language = parse_language(args.language)
     if args.language is None:
         print('ERROR: language [{}] not supported'.format(args.language))
         sys.exit(1)
+    args.ext = fix_ext(args.ext)
+    args.raw_ext = fix_ext(args.raw_ext)
 
     main(args)

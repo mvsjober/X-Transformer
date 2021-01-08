@@ -72,7 +72,13 @@ unzip yso-fi-pifa-tfidf-bert-50000.zip
 Generate test set input files:
 
 ```bash
-./xbert_generate_test.py ~/data/hpd/test/kirjaesittelyt/yso/fin/test/ ~/data/hpd/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv datasets/yso-fi fi --extra_test kes --ext tnpp
+./xbert_generate_test.py /path/to/Annif-corpora/fulltext/kirjastonhoitaja/test/ /path/to/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv datasets/yso-fi fi --extra_test kh --ext tnpp
+```
+
+Another example with splitting of long text to max 128 words:
+
+```bash
+./xbert_generate_test.py /path/to/jyu-theses/fin-test /path/to/Annif-corpora/vocab/yso-ysoplaces-cicero-fi.tsv datasets/yso-fi fi --extra_test jyu --split 128 --ext tnpp --raw_ext tnpp
 ```
 
 Note that this requires that we have generated `.tnpp.txt` versions of all the test set text files. First, the [Turku neural parser pipeline](http://turkunlp.org/Turku-neural-parser-pipeline/) tools are used to generate `.txt.conllu` files. Next:
@@ -84,7 +90,13 @@ for i in *.txt.conllu ; do grep -v "^#" $i | cut -f3 | tr "#" " " | tr "\n" " " 
 Run inference and evaluation:
 
 ```bash
-./run_transformer_extra_test.sh yso-fi pifa-tfidf bert-base-finnish-uncased TurkuNLP/bert-base-finnish-uncased-v1 kes 128 0 -50000
+./run_transformer_extra_test.sh yso-fi pifa-tfidf bert-base-finnish-uncased TurkuNLP/bert-base-finnish-uncased-v1 kh 128 0 -50000
+```
+
+For splitted datasets, you have to run an additional script to get the final results. The final results are obtained by averaging over all the parts. The `-l N` option limits the averaging to the `N` first parts.
+
+```bash 
+./xbert_evaluator.py -y datasets/yso-fi/Y.tsjyu.npz -p save_models/yso-fi/pifa-tfidf-s0/ranker-50000/TurkuNLP/bert-base-finnish-uncased-v1/tsjyu.pred.npz -i datasets/yso-fi/testjyu_indices.txt -l 3
 ```
 
 ### Swedish
