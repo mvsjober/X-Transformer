@@ -1,5 +1,7 @@
 # How to use X-Transformer with Annif datasets
 
+<img src="https://www.csc.fi/documents/10180/524564/en_horizontal_cef_logo_2-800px.png/cda2f571-dfca-cda3-40fb-a8a06656d46b?t=1602756015080&imagePreview=1" />
+
 First, we need to use this customized fork, which includes:
 
 - helper scripts to generate X-Transformer input files from Annif-formatted datasets
